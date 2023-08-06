@@ -43,9 +43,9 @@ pub struct SiteConfig {
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Notifiers {
-    Telegram,
-    Twitch,
-    Email,
+    //Telegram,
+    //Twitch,
+    //Email,
     Ntfy,
 }
 
@@ -61,6 +61,8 @@ pub enum RuleConfig {
     OnChangeFrom(String),
     OnChangeTo(String),
     OnChangeFromTo(String, String),
+    OnDecrease,
+    OnIncrease,
     LessThan(f64),
     LessThanOrEqualTo(f64),
     EqualTo(f64),

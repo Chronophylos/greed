@@ -76,6 +76,8 @@ async fn check_site(
     site_config: &SiteConfig,
     context: &mut SiteContext,
 ) -> Result<()> {
+    println!("Checking site: {}", site_config.url);
+
     let html = get_page_html(config, site_config).await?;
 
     let scraped_value = scrape(&html, &context.selector).wrap_err("Failed to scrape html")?;
@@ -85,10 +87,12 @@ async fn check_site(
 
     let should_notify = check_rules(context, &site_config.rules, &value);
     if should_notify {
-        notify(config, &site_config, context.last_value.as_deref(), &value);
+        notify(config, &site_config, context.last_value.as_deref(), &value).await?;
     }
 
     context.last_value = Some(value);
+
+    println!("Done checking site: {}", site_config.url);
 
     Ok(())
 }
@@ -178,13 +182,14 @@ fn apply_transformer(value: String, transformer: &Transformer) -> Result<String>
             let re = Regex::new(&regex)
                 .into_diagnostic()
                 .wrap_err("Error compiling regex")?;
+
             let Some(captures) = re.captures(&value) else {
                     bail!("Regex did not match");
                 };
             let new_value = captures
                 .iter()
                 .skip(1) // skip full match
-                .flatten()
+                .flatten() // skip non-matches
                 .map(|m| m.as_str())
                 .collect::<Vec<_>>()
                 .join("");
@@ -214,37 +219,59 @@ fn check_rules(context: &mut SiteContext, rules: &[RuleConfig], value: &str) -> 
     matched_rule.is_some()
 }
 
-fn check_rule(rule: &RuleConfig, last_value: Option<&str>, value: &str) -> bool {
+fn check_rule(rule: &RuleConfig, last_value: Option<&str>, new_value: &str) -> bool {
     println!("Checking rule: {rule:?}");
 
     match rule {
-        RuleConfig::OnChange => last_value.is_some_and(|last_value| last_value != value),
+        RuleConfig::OnChange => last_value.is_some_and(|last_value| last_value != new_value),
         RuleConfig::OnChangeFrom(old) => {
-            last_value.is_some_and(|last_value| last_value != value && last_value == old)
+            last_value.is_some_and(|last_value| last_value != new_value && last_value == old)
         }
         RuleConfig::OnChangeTo(new) => {
-            last_value.is_some_and(|last_value| last_value != value && value == new)
+            last_value.is_some_and(|last_value| last_value != new_value && new_value == new)
         }
         RuleConfig::OnChangeFromTo(old, new) => {
-            last_value.is_some_and(|last_value| last_value == old && value == new)
+            last_value.is_some_and(|last_value| last_value == old && new_value == new)
         }
-        RuleConfig::LessThan(threshold) => as_64_and(value, |x| x < *threshold),
-        RuleConfig::LessThanOrEqualTo(threshold) => as_64_and(value, |x| x <= *threshold),
-        RuleConfig::EqualTo(threshold) => as_64_and(value, |x| x == *threshold),
-        RuleConfig::MoreThan(threshold) => as_64_and(value, |x| x > *threshold),
-        RuleConfig::MoreThanOrEqualTo(threshold) => as_64_and(value, |x| x >= *threshold),
+        RuleConfig::LessThan(threshold) => {
+            as_64_and(last_value, new_value, |_, new| new < *threshold)
+        }
+        RuleConfig::LessThanOrEqualTo(threshold) => {
+            as_64_and(last_value, new_value, |_, x| x <= *threshold)
+        }
+        RuleConfig::EqualTo(threshold) => {
+            as_64_and(last_value, new_value, |_, new| new == *threshold)
+        }
+        RuleConfig::MoreThan(threshold) => {
+            as_64_and(last_value, new_value, |_, new| new > *threshold)
+        }
+        RuleConfig::MoreThanOrEqualTo(threshold) => {
+            as_64_and(last_value, new_value, |_, new| new >= *threshold)
+        }
+        RuleConfig::OnDecrease => as_64_and(last_value, new_value, |last_value, new_value| {
+            last_value
+                .map(|last_value| last_value > new_value)
+                .unwrap_or(false)
+        }),
+        RuleConfig::OnIncrease => as_64_and(last_value, new_value, |last_value, new_value| {
+            last_value
+                .map(|last_value| last_value < new_value)
+                .unwrap_or(false)
+        }),
     }
 }
 
-fn as_64_and<F>(value: &str, f: F) -> bool
+fn as_64_and<F>(old_value: Option<&str>, new_value: &str, f: F) -> bool
 where
-    F: Fn(f64) -> bool,
+    F: Fn(Option<f64>, f64) -> bool,
 {
-    let Ok(value) = value.parse::<f64>() else {
-        println!("Failed to parse value as float: {value}");
+    let Ok(new_value) = new_value.parse::<f64>() else {
+        println!("Failed to parse new value as float: {new_value}");
 
         return false;
     };
 
-    f(value)
+    let last_value = old_value.and_then(|last_value| last_value.parse::<f64>().ok());
+
+    f(last_value, new_value)
 }
