@@ -1,0 +1,19 @@
+[package]
+name = "greed"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+futures = "0.3.28"
+miette = { version = "5.10.0", features = ["fancy"] }
+regex = "1.9.1"
+reqwest = "0.11.18"
+scraper = "0.17.1"
+serde = { version = "1.0.180", features = ["derive"] }
+thirtyfour = "0.31.0"
+tokio = { version = "1.29.1", features = ["full"] }
+toml = "0.7.6"
+selenium-manager = { git = "https://github.com/SeleniumHQ/selenium", branch = "trunk" }
+humantime-serde = "1.1.1"
