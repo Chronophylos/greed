@@ -1,0 +1,62 @@
+# Greed global config
+#
+
+# Overwrite the default user agent
+# user_agent = "greed/0.1.0"
+
+# Selenium
+# Required if you want to use selenium to scrape sites.
+#
+[selenium]
+url = "http://localhost:4444"
+driver = "chrome"
+
+# Notifiers
+# 
+
+[ntfy]
+# name of the topic to send to
+topic = "some-topic-name"
+
+# Sites
+#
+# You can add as many sites as you want. Just copy the block below and
+# change the values. The name of the block is the name of the site.
+
+[[sites]]
+
+# Name for this site
+name = "Example Site"
+
+# URL to scrape
+url = "https://example.com"
+
+# Interval to check the site
+# 1s, 1m, 1h, 1d
+# default is 1h
+# interval = "1h"
+
+# If you want to use selenium to scrape the site, set use_browser to true
+# otherwise greed will use the default http client. This is faster but
+# might not work on some sites. If you want to use selenium, make sure
+# to set the selenium.url and selenium.driver config values.
+# default is false
+#use_browser = false
+
+# CSS selector to find a element
+selector = '#someid > div.klass'
+
+# List of transformers to apply to the extracted value
+# see README.md for more info
+# optional
+transformers = [
+  { "RegexExtract" = 'this is ignored (this is extraced).*(this aswell)' },
+  { "Replace" = { "from" = "this", "to" = "that" } },
+]
+
+# List of rules to apply to the extracted value
+# see README.md for more info
+rules = ["OnChange", { "LessThan" = 60.0 }]
+
+# List of notifiers to use when a rule matches
+notifiers = ["ntfy"]
