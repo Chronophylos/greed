@@ -1,25 +1,4 @@
-# Greed - A price watcher
-
-<hr>
-
-Greed is a powerful price-watching tool that allows you to monitor changes on
-websites and receive timely notifications whenever anything changes. Whether
-you are tracking price updates, stock availability, or any other dynamic
-content on a website, Greed has got you covered.
-
-## Usage
-
-```sh
-docker run --rm -d--name greed -v config.toml:config.toml ghcr.io/chronophylos/greed:main
-```
-
-## Configuration
-
-TODO
-
-# README.md for Greed - A Price Watcher
-
-![Greed Logo](https://example.com/path/to/logo.png)
+# Greed - A Price Watcher
 
 Greed is a powerful price-watching tool that allows you to monitor changes on
 websites and receive timely notifications whenever anything changes. Whether
@@ -52,7 +31,7 @@ To get started with Greed, follow these steps:
    Greed Docker image:
 
    ```sh
-   docker pull chronophylos/greed:latest
+   docker pull ghcr.io/chronophylos/greed:main
    ```
 
 3. **Create Configuration**: Create a `greed.toml` file to specify the websites
@@ -65,7 +44,7 @@ To get started with Greed, follow these steps:
    `greed.toml` file:
 
    ```sh
-   docker run --rm -d --name greed -v /path/to/config.toml:/greed.toml chronophylos/greed:latest
+   docker run --rm -d --name greed -v /path/to/config.toml:/greed.toml chronophylos/greed:main
    ```
 
    Greed will now begin monitoring the websites according to your configuration.
