@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use miette::{IntoDiagnostic, Result};
+use regex::Regex;
 use serde::Deserialize;
 
 const DEFAULT_CONFIG_PATH: &str = "greed.toml";
@@ -56,24 +57,32 @@ pub struct TelegramConfig {
 }
 
 #[derive(Debug, Clone, Deserialize)]
+#[serde(tag = "type")]
 pub enum RuleConfig {
     OnChange,
-    OnChangeFrom(String),
-    OnChangeTo(String),
-    OnChangeFromTo(String, String),
+    OnChangeFrom { from: String },
+    OnChangeTo { to: String },
+    OnChangeFromTo { from: String, to: String },
     OnDecrease,
     OnIncrease,
-    LessThan(f64),
-    LessThanOrEqualTo(f64),
-    EqualTo(f64),
-    MoreThan(f64),
-    MoreThanOrEqualTo(f64),
+    LessThan { threshold: f64 },
+    LessThanOrEqualTo { threshold: f64 },
+    EqualTo { threshold: f64 },
+    MoreThan { threshold: f64 },
+    MoreThanOrEqualTo { threshold: f64 },
 }
 
 #[derive(Debug, Clone, Deserialize)]
+#[serde(tag = "type")]
 pub enum Transformer {
-    RegexExtract(String),
-    Replace { from: String, to: String },
+    RegexExtract {
+        #[serde(with = "serde_regex")]
+        regex: Regex,
+    },
+    Replace {
+        from: String,
+        to: String,
+    },
 }
 
 #[derive(Debug, Clone, Deserialize)]

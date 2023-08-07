@@ -1,11 +1,12 @@
 use miette::{bail, miette, Context, IntoDiagnostic, Result};
-use regex::Regex;
 use scraper::{Html, Selector};
 use thirtyfour::prelude::*;
 use tokio::time;
 
-use crate::config::{read_config, Config, RuleConfig, SiteConfig, Transformer};
-use crate::notifiers::notify;
+use crate::{
+    config::{read_config, Config, RuleConfig, SiteConfig, Transformer},
+    notifiers::notify,
+};
 
 mod config;
 mod notifiers;
@@ -178,12 +179,8 @@ fn apply_transformer(value: String, transformer: &Transformer) -> Result<String>
     println!("Applying transformer: {transformer:?} to {value}");
 
     match transformer {
-        Transformer::RegexExtract(regex) => {
-            let re = Regex::new(&regex)
-                .into_diagnostic()
-                .wrap_err("Error compiling regex")?;
-
-            let Some(captures) = re.captures(&value) else {
+        Transformer::RegexExtract { regex } => {
+            let Some(captures) = regex.captures(&value) else {
                     bail!("Regex did not match");
                 };
             let new_value = captures
@@ -224,28 +221,28 @@ fn check_rule(rule: &RuleConfig, last_value: Option<&str>, new_value: &str) -> b
 
     match rule {
         RuleConfig::OnChange => last_value.is_some_and(|last_value| last_value != new_value),
-        RuleConfig::OnChangeFrom(old) => {
-            last_value.is_some_and(|last_value| last_value != new_value && last_value == old)
+        RuleConfig::OnChangeFrom { from } => {
+            last_value.is_some_and(|last_value| last_value != new_value && last_value == from)
         }
-        RuleConfig::OnChangeTo(new) => {
-            last_value.is_some_and(|last_value| last_value != new_value && new_value == new)
+        RuleConfig::OnChangeTo { to } => {
+            last_value.is_some_and(|last_value| last_value != new_value && new_value == to)
         }
-        RuleConfig::OnChangeFromTo(old, new) => {
-            last_value.is_some_and(|last_value| last_value == old && new_value == new)
+        RuleConfig::OnChangeFromTo { from, to } => {
+            last_value.is_some_and(|last_value| last_value == from && new_value == to)
         }
-        RuleConfig::LessThan(threshold) => {
+        RuleConfig::LessThan { threshold } => {
             as_64_and(last_value, new_value, |_, new| new < *threshold)
         }
-        RuleConfig::LessThanOrEqualTo(threshold) => {
+        RuleConfig::LessThanOrEqualTo { threshold } => {
             as_64_and(last_value, new_value, |_, x| x <= *threshold)
         }
-        RuleConfig::EqualTo(threshold) => {
+        RuleConfig::EqualTo { threshold } => {
             as_64_and(last_value, new_value, |_, new| new == *threshold)
         }
-        RuleConfig::MoreThan(threshold) => {
+        RuleConfig::MoreThan { threshold } => {
             as_64_and(last_value, new_value, |_, new| new > *threshold)
         }
-        RuleConfig::MoreThanOrEqualTo(threshold) => {
+        RuleConfig::MoreThanOrEqualTo { threshold } => {
             as_64_and(last_value, new_value, |_, new| new >= *threshold)
         }
         RuleConfig::OnDecrease => as_64_and(last_value, new_value, |last_value, new_value| {

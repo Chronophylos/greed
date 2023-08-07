@@ -1,5 +1,3 @@
-LABEL org.opencontainers.image.description "A price watcher"
-
 # Using the `rust-musl-builder` as base image, instead of 
 # the official Rust toolchain
 FROM clux/muslrust:stable AS chef
@@ -19,6 +17,7 @@ COPY . .
 RUN cargo build --release --target x86_64-unknown-linux-musl --bin greed
 
 FROM alpine AS runtime
+LABEL org.opencontainers.image.description "A price watcher"
 RUN addgroup -S myuser && adduser -S myuser -G myuser
 COPY --from=builder /app/target/x86_64-unknown-linux-musl/release/greed /usr/local/bin/
 USER myuser

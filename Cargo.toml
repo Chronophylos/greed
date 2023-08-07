@@ -17,3 +17,4 @@ tokio = { version = "1.29.1", features = ["full"] }
 toml = "0.7.6"
 selenium-manager = { git = "https://github.com/SeleniumHQ/selenium", branch = "trunk" }
 humantime-serde = "1.1.1"
+serde_regex = "1.1.0"

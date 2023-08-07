@@ -1,5 +1,5 @@
 # Greed
-<it>A price watcher</it>
+**A price watcher**
 
 <hr>
 

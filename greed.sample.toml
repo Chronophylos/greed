@@ -46,17 +46,26 @@ url = "https://example.com"
 # CSS selector to find a element
 selector = '#someid > div.klass'
 
-# List of transformers to apply to the extracted value
-# see README.md for more info
-# optional
-transformers = [
-  { "RegexExtract" = 'this is ignored (this is extraced).*(this aswell)' },
-  { "Replace" = { "from" = "this", "to" = "that" } },
-]
-
-# List of rules to apply to the extracted value
-# see README.md for more info
-rules = ["OnChange", { "LessThan" = 60.0 }]
-
 # List of notifiers to use when a rule matches
 notifiers = ["ntfy"]
+
+# Transformers to apply to the extracted value
+# see README.md for more info
+# optional
+[[sites.transformers]]
+type = "RegexExtract"
+regex = 'this is ignored (this is extraced).*(this aswell)'
+
+[[sites.transformers]]
+type = "Replace"
+from = "this"
+to = "that"
+
+# Rules to compare with the extraced value
+# see README.md for more info
+[[sites.rules]]
+type = "OnChange"
+
+[[sites.rules]]
+type = "LessThan"
+threshold = 60.0
