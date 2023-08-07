@@ -1,3 +1,5 @@
+LABEL org.opencontainers.image.description "A price watcher"
+
 # Using the `rust-musl-builder` as base image, instead of 
 # the official Rust toolchain
 FROM clux/muslrust:stable AS chef
